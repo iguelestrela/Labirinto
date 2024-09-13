@@ -1,0 +1,286 @@
+import random
+
+menorY = 1
+menorX = 2
+maiorY = 3
+maiorX = 4
+
+
+def criarTabuleiro(n, n1, nBarreiras):
+    numeroAletario1, numeroAletario2 = random.randint(0, n - 1), random.randint(0, n1 - 1)
+    numeroAletario3, numeroAletario4 = random.randint(0, n - 1), random.randint(0, n1 - 1)
+
+    while numeroAletario3 == numeroAletario1 and numeroAletario4 == numeroAletario2:
+        numeroAletario3, numeroAletario4 = random.randint(0, n - 1), random.randint(0, n1 - 1)
+
+    matriz = [['_' * 7 for _ in range(n1)] for _ in range(n)]
+    matriz[numeroAletario1][numeroAletario2] = '_'*7
+    matriz[numeroAletario3][numeroAletario4] = '__fim__'
+
+
+    for _ in range(nBarreiras):
+        while True:
+            barreiraX, barreiraY = random.randint(0, n - 1), random.randint(0, n1 - 1)
+            if matriz[barreiraX][barreiraY] == '_' * 7:
+                matriz[barreiraX][barreiraY] = 'barreira'
+                break
+
+    return {
+        'tabuleiro': matriz,
+        'jogador': {'x': numeroAletario1, 'y': numeroAletario2},
+        'fim': {'x': numeroAletario3, 'y': numeroAletario4}
+    }
+
+
+def mostrarTabuleiro(tabuleiro, n, jogador, fim = False):
+    if fim != False:
+        tabuleiro[fim['x']][fim['y']] = '__fim__'
+
+    tabuleiro[jogador['x']][jogador['y']] = 'jogador'
+    for i in range(n):
+        print(tabuleiro[i])
+
+    tabuleiro[jogador['x']][jogador['y']] = '_'*7
+
+
+def iaAEstrela(tabuleiro, jogadorCerto, fim, altura, largura):
+    print(f'posição fim {fim}')
+    print(f'posição Jogador {jogadorCerto}')
+
+    f = abs(fim['x'] - jogadorCerto['x']) + abs(fim['y'] - jogadorCerto['y'])
+    abertos = {(jogadorCerto['x'], jogadorCerto['y']): f}
+    anteriorJogador = {(jogadorCerto['x'], jogadorCerto['y']): f}
+    jogador = {}
+    jogadorNovo = {}
+    cont = contagem = 0
+    while abertos:
+        array = min(abertos, key=lambda k: abertos[k])
+        jogador['x'] = array[0]
+        jogador['y'] = array[1]
+        jogador['f'] = abertos[array]
+        abertos.pop(array)
+        mostrarTabuleiro(tabuleiro, largura, jogador)
+        contagem += 1
+        for i in range(4):
+            if i == 0:
+                jogado = jogadaAEstrela(anteriorJogador, jogador, menorX, tabuleiro, abertos, fim, cont)
+                if jogado[0]:
+                    cont+1
+                    abertos[(jogador['x']-1, jogador['y'])] = jogado[1]
+                    jogadorNovo['x'] = jogador['x']-1
+                    jogadorNovo['y'] = jogador['y']
+
+            elif i == 2:
+                jogado = jogadaAEstrela(anteriorJogador, jogador, maiorX, tabuleiro, abertos, fim, cont)
+                if jogado[0]:
+                    cont+1
+                    abertos[(jogador['x'] + 1, jogador['y'])] = jogado[1]
+                    jogadorNovo['x'] = jogador['x']+1
+                    jogadorNovo['y'] = jogador['y']
+
+            elif i == 1:
+                jogado = jogadaAEstrela(anteriorJogador, jogador, menorY, tabuleiro, abertos, fim, cont)
+                if jogado[0]:
+                    cont+1
+                    abertos[(jogador['x'], jogador['y']-1)] = jogado[1]
+                    jogadorNovo['x'] = jogador['x']
+                    jogadorNovo['y'] = jogador['y'] - 1
+
+            elif i == 3:
+                jogado = jogadaAEstrela(anteriorJogador, jogador, maiorY, tabuleiro, abertos, fim, cont)
+                if jogado[0]:
+                    cont+1
+                    abertos[(jogador['x'], jogador['y'] + 1)] = jogado[1]
+                    jogadorNovo['x'] = jogador['x']
+                    jogadorNovo['y'] = jogador['y'] + 1
+
+        anteriorJogador[(jogador['x'] - 1, jogador['y'])] = jogado[1]
+        print(jogador)
+        if [jogador['x'],  jogador['y']] == [fim['x'], fim['y']]:
+            print('ganhou!')
+            break
+    print(jogador)
+    mostrarTabuleiro(tabuleiro, largura, jogador)
+    print(f'fim de jogo! Com {contagem} jogadas')
+
+
+def iaLargura(tabuleiro, jogadorCerto, fim, altura, largura):
+    print(f'posição fim {fim}')
+    print(f'posição Jogador {jogadorCerto}')
+    abertos = [[jogadorCerto['x'], jogadorCerto['y']]]
+    anteriorJogador = [[jogadorCerto['x'], jogadorCerto['y']]]
+    jogador = {}
+    jogadorNovo = {}
+    cont = 0
+    while abertos:
+        array = abertos.pop(0)
+        jogador['x'] = array[0]
+        jogador['y'] = array[1]
+        mostrarTabuleiro(tabuleiro, largura, jogador)
+        cont += 1
+        for i in range(4):
+            if i == 0:
+                jogado = jogada(anteriorJogador, jogador, menorX, tabuleiro, abertos)
+                valor = menorX
+                if jogado:
+                    abertos.append([jogador['x']-1, jogador['y'], valor])
+                    jogadorNovo['x'] = jogador['x']-1
+                    jogadorNovo['y'] = jogador['y']
+
+            elif i == 2:
+                jogado = jogada(anteriorJogador, jogador, maiorX, tabuleiro, abertos)
+                valor = maiorX
+                if jogado:
+                    abertos.append([jogador['x']+1, jogador['y'], valor])
+                    jogadorNovo['x'] = jogador['x']+1
+                    jogadorNovo['y'] = jogador['y']
+
+            elif i == 1:
+                jogado = jogada(anteriorJogador, jogador, menorY, tabuleiro, abertos)
+                valor = menorY
+                if jogado:
+                    abertos.append([jogador['x'], jogador['y']-1, valor])
+                    jogadorNovo['x'] = jogador['x']
+                    jogadorNovo['y'] = jogador['y'] - 1
+
+            elif i == 3:
+                jogado = jogada(anteriorJogador, jogador, maiorY, tabuleiro, abertos)
+                valor = maiorY
+                if jogado:
+                    abertos.append([jogador['x'], jogador['y']+1, valor])
+                    jogadorNovo['x'] = jogador['x']
+                    jogadorNovo['y'] = jogador['y'] + 1
+
+        anteriorJogador.append([jogador['x'], jogador['y']])
+        print(jogador)
+        if [jogador['x'],  jogador['y']] == [fim['x'], fim['y']]:
+            print('ganhou!')
+            break
+    print(jogador)
+    mostrarTabuleiro(tabuleiro, largura, jogador)
+    print(f'fim de jogo! Com {cont} Jogadas')
+
+
+def iaProfundidade(tabuleiro, jogadorCerto, fim, altura, largura):
+    print(f'posição fim {fim}')
+    print(f'posição Jogador {jogadorCerto}')
+    abertos = [[jogadorCerto['x'], jogadorCerto['y']]]
+    anteriorJogador = [[jogadorCerto['x'], jogadorCerto['y']]]
+    jogador = {}
+    cont = 0
+    while abertos:
+        array = abertos[- 1]
+        jogador['x'] = array[0]
+        jogador['y'] = array[1]
+        mostrarTabuleiro(tabuleiro, largura, jogador)
+        cont += 1
+        for i in range(5):
+            if i == 0:
+                jogado = jogada(anteriorJogador, jogador, menorX, tabuleiro, abertos)
+                if jogado:
+                    abertos.append([jogador['x']-1, jogador['y']])
+                    break
+
+            elif i == 2:
+                jogado = jogada(anteriorJogador, jogador, maiorX, tabuleiro, abertos)
+                if jogado:
+                    abertos.append([jogador['x']+1, jogador['y']])
+                    break
+
+            elif i == 1:
+                jogado = jogada(anteriorJogador, jogador, menorY, tabuleiro, abertos)
+                if jogado:
+                    abertos.append([jogador['x'], jogador['y']-1])
+                    break
+
+            elif i == 3:
+                jogado = jogada(anteriorJogador, jogador, maiorY, tabuleiro, abertos)
+                if jogado:
+                    abertos.append([jogador['x'], jogador['y']+1])
+                    break
+            else:
+                abertos.pop(len(abertos) - 1)
+                anteriorJogador.append([jogador['x'], jogador['y']])
+
+
+        print(jogador)
+        if [jogador['x'],  jogador['y']] == [fim['x'], fim['y']]:
+            print('ganhou!')
+            break
+    print(jogador)
+    mostrarTabuleiro(tabuleiro, largura, jogador)
+    print(f'fim de jogo!Com {cont} jogadas')
+
+
+def jogada(anteriores, jogador, valor, tabuleiro, abertos):
+    novoX = jogador['x']
+    novoY = jogador['y']
+
+    if valor == maiorY:
+        novoY += 1
+    elif valor == menorY:
+        novoY -= 1
+    elif valor == maiorX:
+        novoX += 1
+    elif valor == menorX:
+        novoX -= 1
+
+    if 0 <= novoX < len(tabuleiro) and 0 <= novoY < len(tabuleiro[0]):
+        if [novoX, novoY] not in anteriores and [novoX, novoY] not in abertos and tabuleiro[novoX][novoY] != 'barreira':
+            return 1
+    return 0
+
+
+def jogadaAEstrela(anteriores, jogador, valor, tabuleiro, abertos, fim, passo):
+    novoX = jogador['x']
+    novoY = jogador['y']
+
+    if valor == maiorY:
+        novoY += 1
+    elif valor == menorY:
+        novoY -= 1
+    elif valor == maiorX:
+        novoX += 1
+    elif valor == menorX:
+        novoX -= 1
+    f = abs(fim['x'] - novoX) + abs(fim['y'] - novoY) + passo
+    if 0 <= novoX < len(tabuleiro) and 0 <= novoY < len(tabuleiro[0]) and tabuleiro[novoX][novoY] != 'barreira':
+        if (novoX, novoY) not in anteriores and (novoX, novoY) not in abertos:
+            return (1, f)
+        else:
+            if((novoX, novoY) in abertos and f < abertos[(novoX, novoY)]):
+                return (1, f)
+            if ((novoX, novoY) in anteriores and f < anteriores[(novoX, novoY)]):
+                return (1, f)
+    return (0, f)
+
+
+if __name__ == '__main__':
+    largura = int(input('Qual a largura: '))
+    altura = int(input('Qual a altura: '))
+    nBarreiras = int(input('Quantas Barreiras: '))
+    jogo = criarTabuleiro(largura, altura, nBarreiras)
+    mostrarTabuleiro(jogo['tabuleiro'], largura, jogo['jogador'], jogo['fim'])
+    escolha = 0
+    opcoes = "0 - Rever tableiro\n1 - A*\n2 - IA Largura\n3 - IA Profundidade\n4 - Novo Tabuleiro\n5- sair "
+    while escolha != 5:
+        print(opcoes)
+        escolha = int(input('escolha: '))
+
+        if escolha == 1:
+            mostrarTabuleiro(jogo['tabuleiro'], largura, jogo['jogador'], jogo['fim'])
+            iaAEstrela(jogo['tabuleiro'], jogo['jogador'], jogo['fim'], altura, largura)
+        elif escolha == 2:
+            mostrarTabuleiro(jogo['tabuleiro'], largura, jogo['jogador'], jogo['fim'])
+            iaLargura(jogo['tabuleiro'], jogo['jogador'], jogo['fim'], altura, largura)
+        elif escolha == 3:
+            mostrarTabuleiro(jogo['tabuleiro'], largura, jogo['jogador'], jogo['fim'])
+            iaProfundidade(jogo['tabuleiro'], jogo['jogador'], jogo['fim'], altura, largura)
+        elif escolha == 4:
+            largura = int(input('Qual a largura: '))
+            altura = int(input('Qual a altura: '))
+            nBarreiras = int(input('Quantas Barreiras: '))
+            jogo = criarTabuleiro(largura, altura, nBarreiras)
+            mostrarTabuleiro(jogo['tabuleiro'], largura, jogo['jogador'], jogo['fim'])
+        elif escolha == 0:
+            mostrarTabuleiro(jogo['tabuleiro'], largura, jogo['jogador'], jogo['fim'])
